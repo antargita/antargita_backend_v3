@@ -1,0 +1,532 @@
+openapi: 3.0.3
+info:
+  title: Antargita Backend API
+  version: 1.0.0
+  description: Swagger file for testing Antargita backend APIs.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development server
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: health
+      responses:
+        '200':
+          description: Service status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /v1/user-discovery:
+    post:
+      tags: [Ingestion]
+      summary: Save user profile and discovery data
+      operationId: userDiscovery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDiscoveryPayload'
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusSavedResponse'
+
+  /v1/usage:
+    post:
+      tags: [Ingestion]
+      summary: Upsert usage report for a user and date
+      operationId: usage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsagePayload'
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusSavedResponse'
+
+  /v1/journal:
+    post:
+      tags: [Ingestion]
+      summary: Sync journal entries
+      operationId: journal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalPayload'
+      responses:
+        '200':
+          description: Journal sync result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalSyncResponse'
+
+  /v1/reel-counter:
+    post:
+      tags: [Ingestion]
+      summary: Save reel counters by date
+      operationId: reelCounter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReelPayload'
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusSavedResponse'
+
+  /v1/user/{user_id}:
+    get:
+      tags: [Read]
+      summary: Get user profile with discovery
+      operationId: getUserProfile
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/usage/{user_id}:
+    get:
+      tags: [Read]
+      summary: Get all usage reports for a user
+      operationId: getUsage
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usage reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UsagePayload'
+
+  /v1/journal/{user_id}:
+    get:
+      tags: [Read]
+      summary: Get all journal entries for a user
+      operationId: getJournals
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Journal entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalEntry'
+
+  /v1/journal/{user_id}/date/{date}:
+    get:
+      tags: [Read]
+      summary: Get journal entries for a user on a specific UTC date
+      operationId: getJournalsByDate
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: date
+          required: true
+          schema:
+            type: string
+          description: Date in YYYY-MM-DD format
+      responses:
+        '200':
+          description: Journal entries for the given date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalEntry'
+
+  /v1/journal/{user_id}/range:
+    get:
+      tags: [Read]
+      summary: Get journal entries for a user in a date range
+      operationId: getJournalsRange
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: start_date
+          required: true
+          schema:
+            type: string
+          description: Start date in YYYY-MM-DD format
+        - in: query
+          name: end_date
+          required: true
+          schema:
+            type: string
+          description: End date in YYYY-MM-DD format
+      responses:
+        '200':
+          description: Journal entries in date range
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalEntry'
+
+  /v1/journal/{user_id}/latest:
+    get:
+      tags: [Read]
+      summary: Get latest journal entries for a user
+      operationId: getLatestJournals
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Maximum number of latest entries to return
+      responses:
+        '200':
+          description: Latest journal entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalEntry'
+
+  /v1/reel-counter/{user_id}:
+    get:
+      tags: [Read]
+      summary: Get all reel counters for a user
+      operationId: getReels
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reel counters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReelDay'
+
+  /v1/insights/{user_id}:
+    get:
+      tags: [Read]
+      summary: Get aggregated insight metrics
+      operationId: getInsights
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Insight summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightsResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+
+    StatusSavedResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: saved
+
+    JournalSyncResponse:
+      type: object
+      required: [status, count]
+      properties:
+        status:
+          type: string
+          example: synced
+        count:
+          type: integer
+          example: 2
+
+    ErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string
+
+    Discovery:
+      type: object
+      required: [categories, problems, onboarding_complete]
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+        problems:
+          type: array
+          items:
+            type: string
+        onboarding_complete:
+          type: boolean
+
+    UserDiscoveryPayload:
+      type: object
+      required:
+        - schema_version
+        - client_timestamp_ms
+        - user_id
+        - email
+        - display_name
+        - discovery
+      properties:
+        schema_version:
+          type: integer
+          example: 1
+        client_timestamp_ms:
+          type: integer
+          format: int64
+          example: 1713782400000
+        user_id:
+          type: string
+          example: user_001
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        display_name:
+          type: string
+          example: Abhay
+        discovery:
+          $ref: '#/components/schemas/Discovery'
+
+    AppUsage:
+      type: object
+      required: [package_name, app_label, category, foreground_ms, session_count]
+      properties:
+        package_name:
+          type: string
+          example: com.instagram.android
+        app_label:
+          type: string
+          example: Instagram
+        category:
+          type: string
+          example: Social
+        foreground_ms:
+          type: integer
+          example: 120000
+        session_count:
+          type: integer
+          example: 5
+
+    UsagePayload:
+      type: object
+      required:
+        - schema_version
+        - report_date
+        - timezone
+        - total_foreground_ms
+        - user_id
+        - app_usage
+      properties:
+        schema_version:
+          type: integer
+          example: 1
+        report_date:
+          type: string
+          example: '2026-04-22'
+        timezone:
+          type: string
+          example: Asia/Kolkata
+        total_foreground_ms:
+          type: integer
+          example: 240000
+        user_id:
+          type: string
+          example: user_001
+        app_usage:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppUsage'
+
+    JournalEntry:
+      type: object
+      required: [id, title, body, created_at_ms, updated_at_ms]
+      properties:
+        id:
+          type: string
+          example: jrn_001
+        title:
+          type: string
+          example: Morning reflection
+        body:
+          type: string
+          example: I felt calm after meditation.
+        created_at_ms:
+          type: integer
+          format: int64
+          example: 1713782400000
+        updated_at_ms:
+          type: integer
+          format: int64
+          example: 1713782500000
+
+    JournalPayload:
+      type: object
+      required: [schema_version, client_timestamp_ms, user_id, entries]
+      properties:
+        schema_version:
+          type: integer
+          example: 1
+        client_timestamp_ms:
+          type: integer
+          format: int64
+          example: 1713782400000
+        user_id:
+          type: string
+          example: user_001
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
+
+    ReelDay:
+      type: object
+      required: [date, count]
+      properties:
+        date:
+          type: string
+          example: '2026-04-22'
+        count:
+          type: integer
+          example: 8
+
+    ReelPayload:
+      type: object
+      required: [schema_version, client_timestamp_ms, user_id, daily_counts]
+      properties:
+        schema_version:
+          type: integer
+          example: 1
+        client_timestamp_ms:
+          type: integer
+          format: int64
+          example: 1713782400000
+        user_id:
+          type: string
+          example: user_001
+        daily_counts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReelDay'
+
+    UserProfileResponse:
+      type: object
+      required: [user_id, email, display_name]
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+        discovery:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Discovery'
+
+    TopAppTuple:
+      type: array
+      minItems: 2
+      maxItems: 2
+      items:
+        oneOf:
+          - type: string
+          - type: integer
+      example: [Instagram, 120000]
+
+    InsightsResponse:
+      type: object
+      required: [total_screen_time, top_apps]
+      properties:
+        total_screen_time:
+          type: integer
+          example: 360000
+        top_apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopAppTuple'
