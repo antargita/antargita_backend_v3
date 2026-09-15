@@ -10,7 +10,7 @@ from datetime import datetime
 # -------------------- CONFIG --------------------
 
 DATABASE_URL = "sqlite:///./app.db"
-INGEST_API_URL = "https://laughing-broccoli-hywo.onrender.com/ingest"
+INGEST_API_URL = "https://laughing-broccoli-3sx8.onrender.com/ingest"
 
 # -------------------- DB SETUP --------------------
 
